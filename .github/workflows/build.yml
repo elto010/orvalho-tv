@@ -1,0 +1,37 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compilar
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --stacktrace
+      - name: Renomear
+        run: cp app/build/outputs/apk/release/app-release.apk orvalho-launcher.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: orvalho-launcher
+          path: orvalho-launcher.apk
+      # Publica num link fixo: https://github.com/<usuario>/<repo>/releases/latest/download/orvalho-launcher.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Orvalho 1.0 (build ${{ github.run_number }})
+          files: orvalho-launcher.apk
+          make_latest: true
